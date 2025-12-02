@@ -17,7 +17,11 @@ C言語、Go、Kotlin、Rustで実装した祝日対応カレンダー
 ./scripts/build-test-all.sh
 ```
 
+<<<<<<< HEAD
 ### Individual Build & Test(個別ビルド＆テスト)
+=======
+### Individual Build & Test
+>>>>>>> 40b5944 (Edit Many Files)
 
 #### C
 ```bash
