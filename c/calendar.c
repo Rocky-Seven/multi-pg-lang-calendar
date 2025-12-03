@@ -32,23 +32,22 @@ int load_holidays_from_file(const char* filename) {
     if (fp == NULL) {
         return 0;
     }
-
+    
     char line[512];
     int line_num = 0;
     
     if (fgets(line, sizeof(line), fp) != NULL) {
         line_num++;
     }
-
+    
     while (fgets(line, sizeof(line), fp) != NULL && holiday_count < MAX_HOLIDAYS) {
         line_num++;
-        
         line[strcspn(line, "\n")] = 0;
         line[strcspn(line, "\r")] = 0;
         
         char* trimmed_line = trim(line);
         if (strlen(trimmed_line) == 0) continue;
-
+        
         char date_str[50] = "";
         char name[100] = "";
         
@@ -78,17 +77,15 @@ int load_holidays_from_file(const char* filename) {
         
         if (parsed && year >= 1900 && year <= 2100 && 
             month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-            
             holidays[holiday_count].year = year;
             holidays[holiday_count].month = month;
             holidays[holiday_count].day = day;
             strncpy(holidays[holiday_count].name, clean_name, sizeof(holidays[holiday_count].name) - 1);
             holidays[holiday_count].name[sizeof(holidays[holiday_count].name) - 1] = '\0';
-            
             holiday_count++;
         }
     }
-
+    
     fclose(fp);
     printf("祝日データを読み込みました: %d件\n", holiday_count);
     return 1;
@@ -128,9 +125,8 @@ int get_weekday(int year, int month, int day) {
 }
 
 void print_calendar(int year, int month) {
-    printf("\n        %d年 %d月\n", year, month);
+    printf("\n %d年 %d月\n", year, month);
     printf("----------------------------\n");
-    
     for (int i = 0; i < 7; i++) {
         printf(" %s ", weekdays[i]);
     }
@@ -147,20 +143,17 @@ void print_calendar(int year, int month) {
     int current_weekday = first_day;
     for (int day = 1; day <= days_in_month; day++) {
         int is_hol = is_holiday(year, month, day, NULL);
-        
         if (is_hol) {
             printf("%3d*", day);
         } else {
             printf("%3d ", day);
         }
-        
         current_weekday++;
         if (current_weekday == 7) {
             printf("\n");
             current_weekday = 0;
         }
     }
-    
     if (current_weekday != 0) {
         printf("\n");
     }
@@ -170,12 +163,12 @@ void print_calendar(int year, int month) {
     int found = 0;
     for (int i = 0; i < holiday_count; i++) {
         if (holidays[i].year == year && holidays[i].month == month) {
-            printf("  %2d日: %s\n", holidays[i].day, holidays[i].name);
+            printf(" %2d日: %s\n", holidays[i].day, holidays[i].name);
             found = 1;
         }
     }
     if (!found) {
-        printf("  なし\n");
+        printf(" なし\n");
     }
     printf("\n");
 }

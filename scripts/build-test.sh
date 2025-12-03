@@ -19,7 +19,6 @@ echo ""
 echo -e "${BLUE}📦 Building C...${NC}"
 echo "-----------------------------------"
 cd "$PROJECT_ROOT/c"
-
 if make clean && make; then
     echo -e "${GREEN}✅ C build successful${NC}"
     ls -lh calendar
@@ -33,7 +32,6 @@ echo ""
 echo -e "${BLUE}📦 Building Go...${NC}"
 echo "-----------------------------------"
 cd "$PROJECT_ROOT/go"
-
 if go build -o calendar calendar.go; then
     echo -e "${GREEN}✅ Go build successful${NC}"
     ls -lh calendar

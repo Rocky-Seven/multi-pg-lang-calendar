@@ -512,12 +512,34 @@ func printCalendar(year, month int) {
 
 	fmt.Println("\n【祝日】")
 	found := false
+	
+	// 祝日を日付順にソートして表示
+	type holidayInfo struct {
+		day  int
+		name string
+	}
+	var monthHolidays []holidayInfo
+	
 	for _, h := range holidays {
 		if h.Year == year && h.Month == month {
-			fmt.Printf(" %2d日: %s\n", h.Day, h.Name)
+			monthHolidays = append(monthHolidays, holidayInfo{day: h.Day, name: h.Name})
 			found = true
 		}
 	}
+	
+	// 日付順にソート（簡易バブルソート）
+	for i := 0; i < len(monthHolidays); i++ {
+		for j := i + 1; j < len(monthHolidays); j++ {
+			if monthHolidays[i].day > monthHolidays[j].day {
+				monthHolidays[i], monthHolidays[j] = monthHolidays[j], monthHolidays[i]
+			}
+		}
+	}
+	
+	for _, h := range monthHolidays {
+		fmt.Printf(" %2d日: %s\n", h.day, h.name)
+	}
+	
 	if !found {
 		fmt.Println(" なし")
 	}
@@ -574,8 +596,24 @@ echo ""
 echo "📝 Step 8: Go module 初期化"
 echo "-----------------------------------"
 cd go
-go mod init calendar 2>/dev/null || echo "✅ Go module already initialized"
-echo "✅ Go module 確認完了"
+
+# 既存のgo.modを削除して再作成
+if [ -f "go.mod" ]; then
+    echo "既存のgo.modを削除します"
+    rm -f go.mod
+fi
+
+# 新規作成
+go mod init calendar 2>/dev/null
+
+# go.modの内容を確認・修正
+cat > go.mod << 'GO_MOD_EOF'
+module calendar
+
+go 1.21
+GO_MOD_EOF
+
+echo "✅ Go module 初期化完了"
 cd ..
 echo ""
 

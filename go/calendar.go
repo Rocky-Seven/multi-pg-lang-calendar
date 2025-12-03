@@ -27,7 +27,6 @@ const holidayFile = "holidays.csv"
 
 func downloadAndConvertHolidayFile() error {
 	fmt.Println("内閣府から祝日データをダウンロード中...")
-	
 	resp, err := http.Get(holidayURL)
 	if err != nil {
 		return fmt.Errorf("ダウンロードエラー: %v", err)
@@ -54,7 +53,7 @@ func downloadAndConvertHolidayFile() error {
 	output, err := cmd.Output()
 	if err != nil {
 		os.Rename(tmpFile, holidayFile)
-		fmt.Println("⚠️  UTF-8変換をスキップしました")
+		fmt.Println("⚠️ UTF-8変換をスキップしました")
 	} else {
 		err = os.WriteFile(holidayFile, output, 0644)
 		if err != nil {
@@ -77,7 +76,7 @@ func loadHolidaysFromFile(filename string) error {
 
 	scanner := bufio.NewScanner(file)
 	lineNum := 0
-	
+
 	if scanner.Scan() {
 		lineNum++
 	}
@@ -85,7 +84,6 @@ func loadHolidaysFromFile(filename string) error {
 	for scanner.Scan() {
 		lineNum++
 		line := strings.TrimSpace(scanner.Text())
-		
 		if line == "" {
 			continue
 		}
@@ -100,7 +98,6 @@ func loadHolidaysFromFile(filename string) error {
 
 		dateStr = strings.ReplaceAll(dateStr, "/", "-")
 		dateParts := strings.Split(dateStr, "-")
-		
 		if len(dateParts) != 3 {
 			continue
 		}
@@ -134,9 +131,8 @@ func isHoliday(year, month, day int) (bool, string) {
 }
 
 func printCalendar(year, month int) {
-	fmt.Printf("\n        %d年 %d月\n", year, month)
+	fmt.Printf("\n %d年 %d月\n", year, month)
 	fmt.Println("----------------------------")
-
 	for _, wd := range weekdays {
 		fmt.Printf(" %s ", wd)
 	}
@@ -145,7 +141,6 @@ func printCalendar(year, month int) {
 
 	firstDay := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)
 	firstWeekday := int(firstDay.Weekday())
-	
 	lastDay := firstDay.AddDate(0, 1, -1)
 	daysInMonth := lastDay.Day()
 
@@ -156,20 +151,17 @@ func printCalendar(year, month int) {
 	currentWeekday := firstWeekday
 	for day := 1; day <= daysInMonth; day++ {
 		isHol, _ := isHoliday(year, month, day)
-		
 		if isHol {
 			fmt.Printf("%3d*", day)
 		} else {
 			fmt.Printf("%3d ", day)
 		}
-
 		currentWeekday++
 		if currentWeekday == 7 {
 			fmt.Println()
 			currentWeekday = 0
 		}
 	}
-
 	if currentWeekday != 0 {
 		fmt.Println()
 	}
@@ -177,14 +169,36 @@ func printCalendar(year, month int) {
 
 	fmt.Println("\n【祝日】")
 	found := false
+	
+	// 祝日を日付順にソートして表示
+	type holidayInfo struct {
+		day  int
+		name string
+	}
+	var monthHolidays []holidayInfo
+	
 	for _, h := range holidays {
 		if h.Year == year && h.Month == month {
-			fmt.Printf("  %2d日: %s\n", h.Day, h.Name)
+			monthHolidays = append(monthHolidays, holidayInfo{day: h.Day, name: h.Name})
 			found = true
 		}
 	}
+	
+	// 日付順にソート（簡易バブルソート）
+	for i := 0; i < len(monthHolidays); i++ {
+		for j := i + 1; j < len(monthHolidays); j++ {
+			if monthHolidays[i].day > monthHolidays[j].day {
+				monthHolidays[i], monthHolidays[j] = monthHolidays[j], monthHolidays[i]
+			}
+		}
+	}
+	
+	for _, h := range monthHolidays {
+		fmt.Printf(" %2d日: %s\n", h.day, h.name)
+	}
+	
 	if !found {
-		fmt.Println("  なし")
+		fmt.Println(" なし")
 	}
 	fmt.Println()
 }
@@ -196,10 +210,8 @@ func main() {
 	if err != nil {
 		fmt.Printf("ローカルファイル '%s' が見つかりません。\n", holidayFile)
 		fmt.Print("内閣府から祝日データをダウンロードしますか？ (y/n): ")
-		
 		var response string
 		fmt.Scan(&response)
-		
 		if strings.ToLower(response) == "y" {
 			if err := downloadAndConvertHolidayFile(); err != nil {
 				fmt.Printf("ダウンロード失敗: %v\n", err)
@@ -221,7 +233,6 @@ func main() {
 	var year, month int
 	fmt.Print("\n年を入力してください (例: 2025): ")
 	fmt.Scan(&year)
-
 	fmt.Print("月を入力してください (1-12): ")
 	fmt.Scan(&month)
 
