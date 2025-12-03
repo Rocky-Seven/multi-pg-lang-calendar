@@ -117,6 +117,8 @@ multi-pg-lang-calendar/
 ├── README.md                   # このファイル
 ├── SETUP-1DAY.md              # セットアップガイド（第1日目）
 └── SETUP-2DAY.md              # セットアップガイド（第2日目）
+└── git-setup.sh               # Git初期化 & Push スクリプト
+
 ```
 
 ---
