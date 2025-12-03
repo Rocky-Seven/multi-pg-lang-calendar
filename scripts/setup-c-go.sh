@@ -1,9 +1,8 @@
 #!/bin/bash
-
 # ========================================
 # Multi-PG-Lang Calendar
 # C言語とGo言語 完全セットアップスクリプト
-# このスクリプト1つで全て完了します
+# 既存ファイルを保護しながらセットアップします
 # ========================================
 
 echo "🚀 Multi-PG-Lang Calendar - C & Go Complete Setup"
@@ -13,10 +12,8 @@ echo ""
 # ========================================
 # Step 1: 基準ディレクトリ設定
 # ========================================
-
 echo "📍 Step 1: 基準ディレクトリ設定"
 echo "-----------------------------------"
-
 if [ -d "/workspaces" ]; then
     BASE_DIR="/workspaces"
     echo "✅ GitHub Codespaces環境"
@@ -24,81 +21,74 @@ else
     BASE_DIR="$HOME"
     echo "✅ ローカル環境"
 fi
-
 PROJECT_DIR="$BASE_DIR/multi-pg-lang-calendar"
 echo "プロジェクトディレクトリ: $PROJECT_DIR"
 echo ""
 
 # ========================================
-# Step 2: プロジェクトディレクトリ作成
+# Step 2: プロジェクトディレクトリ確認・作成
 # ========================================
-
-echo "📁 Step 2: プロジェクトディレクトリ作成"
+echo "📁 Step 2: プロジェクトディレクトリ確認"
 echo "-----------------------------------"
-
-if [ -d "$PROJECT_DIR" ]; then
-    echo "⚠️  既存ディレクトリを削除します: $PROJECT_DIR"
-    rm -rf "$PROJECT_DIR"
+if [ ! -d "$PROJECT_DIR" ]; then
+    echo "新規作成します: $PROJECT_DIR"
+    mkdir -p "$PROJECT_DIR"
+else
+    echo "✅ 既存ディレクトリを使用: $PROJECT_DIR"
 fi
-
-mkdir -p "$PROJECT_DIR"
 cd "$PROJECT_DIR"
-echo "✅ 作成完了: $(pwd)"
+echo "現在のディレクトリ: $(pwd)"
 echo ""
 
 # ========================================
-# Step 3: ディレクトリ構造作成
+# Step 3: 必要なディレクトリのみ作成
 # ========================================
-
-echo "📁 Step 3: ディレクトリ構造作成"
+echo "📁 Step 3: 必要なディレクトリ作成"
 echo "-----------------------------------"
-
 mkdir -p c go data scripts docs bin
-
-echo "✅ ディレクトリ構造:"
+echo "✅ ディレクトリ構造確認:"
 ls -la
 echo ""
 
 # ========================================
 # Step 4: 祝日データダウンロード＋UTF-8変換
 # ========================================
-
 echo "📥 Step 4: 祝日データダウンロード＋UTF-8変換"
 echo "-----------------------------------"
-
-if curl -o data/holidays_sjis.csv https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv 2>/dev/null; then
-    echo "✅ ダウンロード成功"
-    
-    # UTF-8変換
-    if command -v iconv &> /dev/null; then
-        iconv -f SHIFT_JIS -t UTF-8 data/holidays_sjis.csv > data/holidays.csv 2>/dev/null
-        echo "✅ UTF-8変換成功 (iconv)"
-    elif command -v nkf &> /dev/null; then
-        nkf -w data/holidays_sjis.csv > data/holidays.csv
-        echo "✅ UTF-8変換成功 (nkf)"
-    else
-        mv data/holidays_sjis.csv data/holidays.csv
-        echo "⚠️  変換ツールなし、そのまま使用"
-    fi
-    
-    rm -f data/holidays_sjis.csv
-    
-    echo "   ファイル: data/holidays.csv"
-    echo "   行数: $(wc -l < data/holidays.csv)"
-    echo "   サイズ: $(ls -lh data/holidays.csv | awk '{print $5}')"
+if [ -f "data/holidays.csv" ]; then
+    echo "✅ 既存の祝日データを使用"
+    echo "  行数: $(wc -l < data/holidays.csv)"
 else
-    echo "❌ ダウンロード失敗"
+    echo "祝日データをダウンロードします..."
+    if curl -o data/holidays_sjis.csv https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv 2>/dev/null; then
+        echo "✅ ダウンロード成功"
+        
+        # UTF-8変換
+        if command -v iconv &> /dev/null; then
+            iconv -f SHIFT_JIS -t UTF-8 data/holidays_sjis.csv > data/holidays.csv 2>/dev/null
+            echo "✅ UTF-8変換成功 (iconv)"
+        elif command -v nkf &> /dev/null; then
+            nkf -w data/holidays_sjis.csv > data/holidays.csv
+            echo "✅ UTF-8変換成功 (nkf)"
+        else
+            mv data/holidays_sjis.csv data/holidays.csv
+            echo "⚠️ 変換ツールなし、そのまま使用"
+        fi
+        
+        rm -f data/holidays_sjis.csv
+        echo "  ファイル: data/holidays.csv"
+        echo "  行数: $(wc -l < data/holidays.csv)"
+    else
+        echo "❌ ダウンロード失敗"
+    fi
 fi
-
 echo ""
 
 # ========================================
 # Step 5: C言語ソースコード作成
 # ========================================
-
 echo "📝 Step 5: C言語ソースコード作成"
 echo "-----------------------------------"
-
 cat > c/calendar.c << 'C_SOURCE_EOF'
 #include <stdio.h>
 #include <stdlib.h>
@@ -134,23 +124,22 @@ int load_holidays_from_file(const char* filename) {
     if (fp == NULL) {
         return 0;
     }
-
+    
     char line[512];
     int line_num = 0;
     
     if (fgets(line, sizeof(line), fp) != NULL) {
         line_num++;
     }
-
+    
     while (fgets(line, sizeof(line), fp) != NULL && holiday_count < MAX_HOLIDAYS) {
         line_num++;
-        
         line[strcspn(line, "\n")] = 0;
         line[strcspn(line, "\r")] = 0;
         
         char* trimmed_line = trim(line);
         if (strlen(trimmed_line) == 0) continue;
-
+        
         char date_str[50] = "";
         char name[100] = "";
         
@@ -180,17 +169,15 @@ int load_holidays_from_file(const char* filename) {
         
         if (parsed && year >= 1900 && year <= 2100 && 
             month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-            
             holidays[holiday_count].year = year;
             holidays[holiday_count].month = month;
             holidays[holiday_count].day = day;
             strncpy(holidays[holiday_count].name, clean_name, sizeof(holidays[holiday_count].name) - 1);
             holidays[holiday_count].name[sizeof(holidays[holiday_count].name) - 1] = '\0';
-            
             holiday_count++;
         }
     }
-
+    
     fclose(fp);
     printf("祝日データを読み込みました: %d件\n", holiday_count);
     return 1;
@@ -230,9 +217,8 @@ int get_weekday(int year, int month, int day) {
 }
 
 void print_calendar(int year, int month) {
-    printf("\n        %d年 %d月\n", year, month);
+    printf("\n %d年 %d月\n", year, month);
     printf("----------------------------\n");
-    
     for (int i = 0; i < 7; i++) {
         printf(" %s ", weekdays[i]);
     }
@@ -249,20 +235,17 @@ void print_calendar(int year, int month) {
     int current_weekday = first_day;
     for (int day = 1; day <= days_in_month; day++) {
         int is_hol = is_holiday(year, month, day, NULL);
-        
         if (is_hol) {
             printf("%3d*", day);
         } else {
             printf("%3d ", day);
         }
-        
         current_weekday++;
         if (current_weekday == 7) {
             printf("\n");
             current_weekday = 0;
         }
     }
-    
     if (current_weekday != 0) {
         printf("\n");
     }
@@ -272,12 +255,12 @@ void print_calendar(int year, int month) {
     int found = 0;
     for (int i = 0; i < holiday_count; i++) {
         if (holidays[i].year == year && holidays[i].month == month) {
-            printf("  %2d日: %s\n", holidays[i].day, holidays[i].name);
+            printf(" %2d日: %s\n", holidays[i].day, holidays[i].name);
             found = 1;
         }
     }
     if (!found) {
-        printf("  なし\n");
+        printf(" なし\n");
     }
     printf("\n");
 }
@@ -325,17 +308,14 @@ int main() {
     return 0;
 }
 C_SOURCE_EOF
-
 echo "✅ c/calendar.c 作成完了"
 echo ""
 
 # ========================================
 # Step 6: C言語 Makefile 作成
 # ========================================
-
 echo "📝 Step 6: C言語 Makefile 作成"
 echo "-----------------------------------"
-
 cat > c/Makefile << 'MAKE_EOF'
 CC = gcc
 CFLAGS = -Wall -O2
@@ -352,17 +332,14 @@ clean:
 run: $(TARGET)
 	./$(TARGET)
 MAKE_EOF
-
 echo "✅ c/Makefile 作成完了"
 echo ""
 
 # ========================================
 # Step 7: Go言語ソースコード作成
 # ========================================
-
 echo "📝 Step 7: Go言語ソースコード作成"
 echo "-----------------------------------"
-
 cat > go/calendar.go << 'GO_SOURCE_EOF'
 package main
 
@@ -393,7 +370,6 @@ const holidayFile = "holidays.csv"
 
 func downloadAndConvertHolidayFile() error {
 	fmt.Println("内閣府から祝日データをダウンロード中...")
-	
 	resp, err := http.Get(holidayURL)
 	if err != nil {
 		return fmt.Errorf("ダウンロードエラー: %v", err)
@@ -420,7 +396,7 @@ func downloadAndConvertHolidayFile() error {
 	output, err := cmd.Output()
 	if err != nil {
 		os.Rename(tmpFile, holidayFile)
-		fmt.Println("⚠️  UTF-8変換をスキップしました")
+		fmt.Println("⚠️ UTF-8変換をスキップしました")
 	} else {
 		err = os.WriteFile(holidayFile, output, 0644)
 		if err != nil {
@@ -443,7 +419,7 @@ func loadHolidaysFromFile(filename string) error {
 
 	scanner := bufio.NewScanner(file)
 	lineNum := 0
-	
+
 	if scanner.Scan() {
 		lineNum++
 	}
@@ -451,7 +427,6 @@ func loadHolidaysFromFile(filename string) error {
 	for scanner.Scan() {
 		lineNum++
 		line := strings.TrimSpace(scanner.Text())
-		
 		if line == "" {
 			continue
 		}
@@ -466,7 +441,6 @@ func loadHolidaysFromFile(filename string) error {
 
 		dateStr = strings.ReplaceAll(dateStr, "/", "-")
 		dateParts := strings.Split(dateStr, "-")
-		
 		if len(dateParts) != 3 {
 			continue
 		}
@@ -500,9 +474,8 @@ func isHoliday(year, month, day int) (bool, string) {
 }
 
 func printCalendar(year, month int) {
-	fmt.Printf("\n        %d年 %d月\n", year, month)
+	fmt.Printf("\n %d年 %d月\n", year, month)
 	fmt.Println("----------------------------")
-
 	for _, wd := range weekdays {
 		fmt.Printf(" %s ", wd)
 	}
@@ -511,7 +484,6 @@ func printCalendar(year, month int) {
 
 	firstDay := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)
 	firstWeekday := int(firstDay.Weekday())
-	
 	lastDay := firstDay.AddDate(0, 1, -1)
 	daysInMonth := lastDay.Day()
 
@@ -522,20 +494,17 @@ func printCalendar(year, month int) {
 	currentWeekday := firstWeekday
 	for day := 1; day <= daysInMonth; day++ {
 		isHol, _ := isHoliday(year, month, day)
-		
 		if isHol {
 			fmt.Printf("%3d*", day)
 		} else {
 			fmt.Printf("%3d ", day)
 		}
-
 		currentWeekday++
 		if currentWeekday == 7 {
 			fmt.Println()
 			currentWeekday = 0
 		}
 	}
-
 	if currentWeekday != 0 {
 		fmt.Println()
 	}
@@ -545,12 +514,12 @@ func printCalendar(year, month int) {
 	found := false
 	for _, h := range holidays {
 		if h.Year == year && h.Month == month {
-			fmt.Printf("  %2d日: %s\n", h.Day, h.Name)
+			fmt.Printf(" %2d日: %s\n", h.Day, h.Name)
 			found = true
 		}
 	}
 	if !found {
-		fmt.Println("  なし")
+		fmt.Println(" なし")
 	}
 	fmt.Println()
 }
@@ -562,10 +531,8 @@ func main() {
 	if err != nil {
 		fmt.Printf("ローカルファイル '%s' が見つかりません。\n", holidayFile)
 		fmt.Print("内閣府から祝日データをダウンロードしますか？ (y/n): ")
-		
 		var response string
 		fmt.Scan(&response)
-		
 		if strings.ToLower(response) == "y" {
 			if err := downloadAndConvertHolidayFile(); err != nil {
 				fmt.Printf("ダウンロード失敗: %v\n", err)
@@ -587,7 +554,6 @@ func main() {
 	var year, month int
 	fmt.Print("\n年を入力してください (例: 2025): ")
 	fmt.Scan(&year)
-
 	fmt.Print("月を入力してください (1-12): ")
 	fmt.Scan(&month)
 
@@ -599,50 +565,42 @@ func main() {
 	printCalendar(year, month)
 }
 GO_SOURCE_EOF
-
 echo "✅ go/calendar.go 作成完了"
 echo ""
 
 # ========================================
 # Step 8: Go module 初期化
 # ========================================
-
 echo "📝 Step 8: Go module 初期化"
 echo "-----------------------------------"
-
 cd go
-go mod init calendar 2>/dev/null
-echo "✅ Go module 初期化完了"
+go mod init calendar 2>/dev/null || echo "✅ Go module already initialized"
+echo "✅ Go module 確認完了"
 cd ..
 echo ""
 
 # ========================================
 # Step 9: シンボリックリンク作成
 # ========================================
-
 echo "🔗 Step 9: シンボリックリンク作成"
 echo "-----------------------------------"
-
 cd c
-ln -sf ../data/holidays.csv holidays.csv
+ln -sf ../data/holidays.csv holidays.csv 2>/dev/null || echo "✅ シンボリックリンクは既存"
 echo "✅ c/holidays.csv -> ../data/holidays.csv"
 cd ..
-
 cd go
-ln -sf ../data/holidays.csv holidays.csv
+ln -sf ../data/holidays.csv holidays.csv 2>/dev/null || echo "✅ シンボリックリンクは既存"
 echo "✅ go/holidays.csv -> ../data/holidays.csv"
 cd ..
-
 echo ""
 
 # ========================================
-# Step 10: .gitignore 作成
+# Step 10: .gitignore 確認・作成
 # ========================================
-
-echo "📝 Step 10: .gitignore 作成"
+echo "📝 Step 10: .gitignore 確認"
 echo "-----------------------------------"
-
-cat > .gitignore << 'GIT_EOF'
+if [ ! -f ".gitignore" ]; then
+    cat > .gitignore << 'GIT_EOF'
 # Compiled binaries
 c/calendar
 go/calendar
@@ -663,87 +621,17 @@ Thumbs.db
 .idea/
 *.swp
 GIT_EOF
-
-echo "✅ .gitignore 作成完了"
+    echo "✅ .gitignore 作成完了"
+else
+    echo "✅ 既存の .gitignore を保持"
+fi
 echo ""
 
 # ========================================
-# Step 11: README.md 作成
+# Step 11: ビルド・テストスクリプト作成
 # ========================================
-
-echo "📝 Step 11: README.md 作成"
+echo "📝 Step 11: ビルド・テストスクリプト作成"
 echo "-----------------------------------"
-
-cat > README.md << 'README_EOF'
-# 🗓️ Multi-PG-Lang Calendar - C & Go
-
-Calendar App implemented in C and Go  
-C言語とGoで実装した祝日対応カレンダー
-
-## ✨ Features
-
-- 🌐 C言語とGo言語で同じ機能を実装
-- 📥 内閣府の祝日データ対応（UTF-8変換済み）
-- 🚀 GitHub Codespaces で即座に試せる
-- 📊 2言語の比較が可能
-
-## 🚀 Quick Start
-
-### Build & Test (自動)
-```bash
-./scripts/build-test.sh
-```
-
-### Individual Usage
-
-#### C
-```bash
-cd c
-make
-echo -e "2025\n5" | ./calendar
-```
-
-#### Go
-```bash
-cd go
-go run calendar.go
-# または
-go build -o calendar calendar.go
-echo -e "2025\n5" | ./calendar
-```
-
-## 📁 Directory Structure
-```
-multi-pg-lang-calendar/
-├── c/              # C言語実装
-│   ├── calendar.c
-│   ├── Makefile
-│   └── holidays.csv -> ../data/holidays.csv
-├── go/             # Go実装
-│   ├── calendar.go
-│   ├── go.mod
-│   └── holidays.csv -> ../data/holidays.csv
-├── data/           # 共通データ（祝日CSV）
-│   └── holidays.csv
-└── scripts/        # スクリプト
-    └── build-test.sh
-```
-
-## 📄 License
-
-MIT License
-README_EOF
-
-echo "✅ README.md 作成完了"
-echo ""
-
-# ========================================
-# Step 12: ビルド・テストスクリプト作成
-# ========================================
-
-echo "📝 Step 12: ビルド・テストスクリプト作成"
-echo "-----------------------------------"
-
 cat > scripts/build-test.sh << 'BUILD_TEST_EOF'
 #!/bin/bash
 
@@ -766,7 +654,6 @@ echo ""
 echo -e "${BLUE}📦 Building C...${NC}"
 echo "-----------------------------------"
 cd "$PROJECT_ROOT/c"
-
 if make clean && make; then
     echo -e "${GREEN}✅ C build successful${NC}"
     ls -lh calendar
@@ -780,7 +667,6 @@ echo ""
 echo -e "${BLUE}📦 Building Go...${NC}"
 echo "-----------------------------------"
 cd "$PROJECT_ROOT/go"
-
 if go build -o calendar calendar.go; then
     echo -e "${GREEN}✅ Go build successful${NC}"
     ls -lh calendar
@@ -819,16 +705,14 @@ echo "======================================"
 echo -e "${GREEN}✅ All tests complete!${NC}"
 echo "======================================"
 BUILD_TEST_EOF
-
 chmod +x scripts/build-test.sh
 echo "✅ scripts/build-test.sh 作成完了"
 echo ""
 
 # ========================================
-# Step 13: ビルド実行
+# Step 12: ビルド実行
 # ========================================
-
-echo "🔨 Step 13: ビルド実行"
+echo "🔨 Step 12: ビルド実行"
 echo "-----------------------------------"
 
 # C言語ビルド
@@ -836,35 +720,29 @@ echo "C言語をビルド中..."
 cd c
 make clean > /dev/null 2>&1
 make
-
 if [ $? -eq 0 ]; then
     echo "✅ C言語ビルド成功"
 else
     echo "❌ C言語ビルド失敗"
 fi
-
 cd ..
 
 # Goビルド
 echo "Go言語をビルド中..."
 cd go
 go build -o calendar calendar.go
-
 if [ $? -eq 0 ]; then
     echo "✅ Go言語ビルド成功"
 else
     echo "❌ Go言語ビルド失敗"
 fi
-
 cd ..
-
 echo ""
 
 # ========================================
-# Step 14: テスト実行
+# Step 13: テスト実行
 # ========================================
-
-echo "🧪 Step 14: テスト実行 (2025年5月)"
+echo "🧪 Step 13: テスト実行 (2025年5月)"
 echo "-----------------------------------"
 echo ""
 
@@ -883,35 +761,36 @@ echo "=== Go言語 ==="
 cd go
 echo "$TEST_INPUT" | ./calendar
 cd ..
-
 echo ""
 
 # ========================================
 # 完了メッセージ
 # ========================================
-
 echo "=========================================="
-echo "✨ セットアップ完了！"
+echo "✨ C & Go セットアップ完了！"
 echo "=========================================="
 echo ""
 echo "📁 プロジェクト: $PROJECT_DIR"
 echo ""
 echo "📝 次のステップ:"
 echo "-----------------------------------"
-echo "  1. プロジェクトディレクトリに移動:"
-echo "     cd $PROJECT_DIR"
+echo " 1. プロジェクトディレクトリに移動:"
+echo "    cd $PROJECT_DIR"
 echo ""
-echo "  2. 再ビルド・テスト:"
-echo "     ./scripts/build-test.sh"
+echo " 2. 再ビルド・テスト:"
+echo "    ./scripts/build-test.sh"
 echo ""
-echo "  3. C言語を手動実行:"
-echo "     cd c"
-echo "     make"
-echo "     echo -e '2025\n5' | ./calendar"
+echo " 3. C言語を手動実行:"
+echo "    cd c"
+echo "    make"
+echo "    echo -e '2025\n5' | ./calendar"
 echo ""
-echo "  4. Go言語を手動実行:"
-echo "     cd go"
-echo "     go run calendar.go"
+echo " 4. Go言語を手動実行:"
+echo "    cd go"
+echo "    go run calendar.go"
+echo ""
+echo " 5. Rustをセットアップ:"
+echo "    ./setup-rust.sh"
 echo ""
 echo "=========================================="
 echo ""
