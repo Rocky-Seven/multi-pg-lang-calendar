@@ -66,6 +66,7 @@ nano setup-c-go.sh
 ### 3-2. スクリプト①の内容を貼り付け
 
 スクリプト①をコピーして、nanoエディタに貼り付けます（Ctrl+Shift+V）:
+
 **注意**: 下記は概要版です。完全版は、以下のブログ記事のスクリプト①を使用してください:
 
 https://my-studies.org/lets-create-a-calendar-that-handles-holidays-using-multiple-programming-languages-c-go-rust-kotlin-day-1/
