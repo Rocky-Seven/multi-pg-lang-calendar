@@ -147,7 +147,8 @@ echo ""
 echo "✨ C & Go セットアップ完了！"
 ```
 
-**注意**: 上記は概要版です。完全版は、以下のブログ記事のスクリプト①を使用してください。
+**注意**: 上記は概要版です。完全版は、以下のブログ記事のスクリプト①を使用してください:
+
 https://my-studies.org/lets-create-a-calendar-that-handles-holidays-using-multiple-programming-languages-c-go-rust-kotlin-day-1/
 
 
