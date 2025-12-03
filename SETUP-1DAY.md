@@ -147,7 +147,9 @@ echo ""
 echo "✨ C & Go セットアップ完了！"
 ```
 
-**注意**: 上記は概要版です。完全版は元記事のスクリプト①を使用してください。
+**注意**: 上記は概要版です。完全版は、以下のブログ記事のスクリプト①を使用してください。
+https://my-studies.org/lets-create-a-calendar-that-handles-holidays-using-multiple-programming-languages-c-go-rust-kotlin-day-1/
+
 
 ### 3-3. スクリプトを保存して実行
 
@@ -197,7 +199,9 @@ nano setup-rust.sh
 
 ### 4-2. スクリプト②の内容を貼り付け
 
-元記事の「スクリプト② Rust追加セットアップ」の完全版を貼り付けます。
+以下のブログ記事の「スクリプト② Rust追加セットアップ」の完全版を貼り付けます。
+
+https://my-studies.org/lets-create-a-calendar-that-handles-holidays-using-multiple-programming-languages-c-go-rust-kotlin-day-1/
 
 ### 4-3. スクリプトを保存して実行
 
