@@ -32,7 +32,9 @@ nano setup-kotlin.sh
 
 ### 1-2. スクリプト③の内容を貼り付け
 
-以下のスクリプトをコピーして貼り付けます（Ctrl+Shift+V）:
+スクリプト③をコピーして貼り付けます（Ctrl+Shift+V）:
+**注意**: 上記は概要版です。完全版は、以下のブログ記事のスクリプト③を使用してください。
+https://my-studies.org/lets-create-a-calendar-that-handles-holidays-using-multiple-programming-languages-c-go-rust-kotlin-day-2/
 
 ```bash
 #!/bin/bash
@@ -126,8 +128,6 @@ echo ""
 
 echo "✨ Kotlinセットアップ完了！"
 ```
-
-**注意**: 上記は概要版です。完全版は元記事のスクリプト③を使用してください。
 
 ### 1-3. スクリプトを保存して実行
 
